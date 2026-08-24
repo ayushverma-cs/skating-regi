@@ -1,0 +1,4 @@
+Server/.env
+Server/uploads/
+Client/dist/
+node_modules/
