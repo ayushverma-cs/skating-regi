@@ -11,9 +11,21 @@ dotenv.config();
 connectDB();
 
 const app = express();
+const allowedOrigins = new Set([
+  "http://localhost:5173",
+  process.env.CLIENT_ORIGIN
+].filter(Boolean));
+const isVercelDeployment = (origin) => /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
 
 app.disable("x-powered-by");
-app.use(cors({ origin: process.env.CLIENT_ORIGIN || "http://localhost:5173", methods: ["GET", "POST", "PATCH"], allowedHeaders: ["Content-Type", "Authorization"] }));
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.has(origin) || isVercelDeployment(origin)) return callback(null, true);
+    return callback(new Error("Origin is not allowed by CORS."));
+  },
+  methods: ["GET", "POST", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.use(express.json({ limit: "100kb" }));
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
