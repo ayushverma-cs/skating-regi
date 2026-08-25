@@ -945,6 +945,9 @@ grid-template-columns:1fr;
 
   .registration-card{
     padding:22px;
+    width:100%;
+    max-width:100%;
+    overflow:hidden;
   }
 
   .auto-info{
@@ -955,6 +958,11 @@ grid-template-columns:1fr;
   .payment-row.total{
     font-size:20px;
   }
+}
+
+@media (max-width:768px){
+  .form-grid, .form-group { min-width:0; }
+  .form-group input, .form-group select { width:100%; max-width:100%; min-width:0; }
 }
 .registration-header{
     background:#0F172A;

@@ -14,7 +14,7 @@ export default function CandidatePhotoUpload({ formData, setFormData, selectedPh
     data.append("candidatePhoto", file);
 
     try {
-      const response = await fetch("http://localhost:5000/api/upload/candidate-photo", { method: "POST", body: data });
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/upload/candidate-photo`, { method: "POST", body: data });
       const result = await response.json();
       if (!result.success) throw new Error(result.message);
 
