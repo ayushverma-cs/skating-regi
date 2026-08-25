@@ -15,7 +15,7 @@ export default function Registration() {
   const handleChange = ({ target }) => {
     const { name, value, checked } = target; let next = { ...formData };
     if (name === "category") next = { ...next, category: value, races: [] };
-    else if (name === "races") { const isMulti = ["Quad", "Inline"].includes(formData.category); next.races = isMulti ? (checked ? [...next.races, value] : next.races.filter((race) => race !== value)) : [value]; }
+    else if (name === "races") next.races = checked ? [value] : [];
     else next[name] = name === "mobile" ? value.replace(/\D/g, "") : value;
     setFormData(next); setErrors((old) => ({ ...old, [name]: "" }));
   };

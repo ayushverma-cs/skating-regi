@@ -24,7 +24,7 @@ export const registrationPayload = (data) => {
   const rsfiCard = cleanText(data.rsfiCard, 200);
 
   const races = Array.isArray(data.races) ? data.races.filter((race) => typeof race === "string") : [];
-  const validRaces = category === "Adjustable Skate" || category === "Toy Skate" ? races.length === 1 && races[0] === "3 Laps" : races.length > 0 && races.every((race) => ["5 Laps", "8 Laps"].includes(race));
+  const validRaces = category === "Adjustable Skate" || category === "Toy Skate" ? races.length === 1 && races[0] === "3 Laps" : races.length === 1 && ["5 Laps", "8 Laps"].includes(races[0]);
   if (!fullName || !data.dob || !cleanText(data.ageGroup, 30) || !club || !coachName || !state || !/^[6-9]\d{9}$/.test(mobile) || !allowedCategories.includes(category) || !["Male", "Female"].includes(gender) || !validRaces || !aadhaarCard.startsWith("/uploads/documents/") || !dobCertificate.startsWith("/uploads/documents/")) {
     throw new Error("Invalid registration data.");
   }
