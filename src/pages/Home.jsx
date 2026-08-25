@@ -3,7 +3,7 @@ import Fee from "../components/Fee";
 import EventDetails from "../components/EventDetails";
 import InfoBanner from "../components/InfoBanner";
 import upperBanner from "../assets/UPPER_BANNER.jpg";
-import mainBanner from "../assets/MAINBANNER.jpg";
+import mainBanner from "../assets/MAINBANNER.png";
 
 export default function Home() {
   return (
