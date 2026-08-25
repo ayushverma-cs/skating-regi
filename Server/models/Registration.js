@@ -1,108 +1,25 @@
 import mongoose from "mongoose";
 
-const registrationSchema = new mongoose.Schema(
-  {
-    fullName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+const registrationSchema = new mongoose.Schema({
+  rsfiRegistrationNo: { type: String, default: "", trim: true },
+  fullName: { type: String, required: true, trim: true },
+  dob: { type: Date, required: true },
+  ageGroup: { type: String, required: true },
+  gender: { type: String, required: true, enum: ["Male", "Female"] },
+  category: { type: String, required: true, enum: ["Adjustable Skate", "Toy Skate", "Quad", "Inline"] },
+  races: { type: [String], required: true },
+  club: { type: String, required: true, trim: true },
+  coachName: { type: String, required: true, trim: true },
+  mobile: { type: String, required: true, trim: true },
+  state: { type: String, required: true, trim: true },
+  aadhaarCard: { type: String, required: true },
+  dobCertificate: { type: String, required: true },
+  rsfiCard: { type: String, default: "" },
+  registrationId: { type: String, unique: true },
+  paymentId: { type: String, unique: true, sparse: true, default: "" },
+  amountPaid: { type: Number, default: 500 },
+  paymentStatus: { type: String, enum: ["Pending", "Paid", "Failed"], default: "Pending" },
+  approvalStatus: { type: String, enum: ["Pending", "Approved", "Rejected"], default: "Pending" },
+}, { timestamps: true });
 
-    fatherName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    gender: {
-      type: String,
-      required: true,
-      enum: ["Male", "Female", "Other"],
-    },
-
-    mobile: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    // Selected by Participant
-    discipline: {
-      type: String,
-      required: true,
-      enum: [
-        "Inline",
-        "Quad",
-        "Skateboard",
-        "Roller Freestyle",
-      ],
-    },
-
-    // Auto-filled from RSFI (Inline/Quad)
-    // Manual for Skateboard/Freestyle
-    dob: {
-      type: Date,
-    },
-
-    // Auto Calculated
-    ageGroup: {
-      type: String,
-      default: "",
-    },
-
-    events: {
-      type: [String],
-      default: [],
-    },
-
-    amountPaid: {
-      type: Number,
-      default: 1,
-    },
-
-    // Uploaded RSFI Card/PDF
-    rsfiCard: {
-      type: String,
-      default: "",
-    },
-
-    // Required passport-style candidate photo
-    candidatePhoto: {
-      type: String,
-      required: true,
-    },
-
-    // Auto Generated after successful payment
-    registrationId: {
-      type: String,
-      unique: true,
-    },
-
-    // Razorpay Payment ID
-    paymentId: {
-      type: String,
-      unique: true,
-      sparse: true,
-      default: "",
-    },
-
-    paymentStatus: {
-      type: String,
-      enum: ["Pending", "Paid", "Failed"],
-      default: "Pending",
-    },
-
-    approvalStatus: {
-      type: String,
-      enum: ["Pending", "Approved", "Rejected"],
-      default: "Pending",
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
-
-const Registration = mongoose.model("Registration", registrationSchema);
-
-export default Registration;
+export default mongoose.model("Registration", registrationSchema);

@@ -73,3 +73,12 @@ export const uploadCandidatePhoto = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const uploadDocument = async (req, res) => {
+  try {
+    const file = req.files?.[0];
+    if (!file || !["aadhaarCard", "dobCertificate", "rsfiCard"].includes(file.fieldname)) return res.status(400).json({ success: false, message: "No valid document uploaded." });
+    const folder = file.fieldname === "rsfiCard" ? "rsfi" : "documents";
+    res.status(200).json({ success: true, documentUrl: `/uploads/${folder}/${file.filename}` });
+  } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+};

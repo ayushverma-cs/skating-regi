@@ -8,7 +8,7 @@ import uploadRouter from "./router/uploadRouter.js";
 import { apiRateLimit } from "./middleware/rateLimit.js";
 dotenv.config();
 
-connectDB();git checkout --ours .gitignore
+connectDB();
 
 const app = express();
 
@@ -17,7 +17,7 @@ app.use(cors({ origin: process.env.CLIENT_ORIGIN || "http://localhost:5173", met
 app.use(express.json({ limit: "100kb" }));
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
-  
+
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   next();

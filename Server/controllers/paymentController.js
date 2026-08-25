@@ -8,7 +8,7 @@ import { saveVerifiedRegistration } from "./registrationController.js";
 export const createOrder = async (req, res) => {
   try {
     const options = {
-      amount: 1 * 100, // ₹1 (Razorpay amount is in paise)
+      amount: 500 * 100, // ₹500 (Razorpay amount is in paise)
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
     };

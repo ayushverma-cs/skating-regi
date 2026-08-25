@@ -1,21 +1,12 @@
-import banner from "../assets/banner.png";
+import mainBanner from "../assets/MAINBANNER.jpg";
 
 export default function Hero() {
   return (
-    <section
-      style={{
-        marginTop: "72px",
-        background: "#fff",
-      }}
-    >
+    <section className="hero-banner">
       <img
-        src={banner}
-        alt="banner"
-        style={{
-          width: "100%",
-          display: "block",
-          filter: "brightness(1.3)",
-        }}
+        src={mainBanner}
+        alt="1st Agra Regional Skating Championship"
+        style={{ width: "100%", display: "block" }}
       />
     </section>
   );

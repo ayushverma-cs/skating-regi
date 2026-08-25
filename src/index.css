@@ -1163,3 +1163,19 @@ grid-template-columns:1fr;
   margin-top: 5px;
   display: block;
 }
+
+.home-banners {
+  margin-top: 72px;
+  background: #020617;
+}
+
+.upper-banner,
+.main-banner {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.registration-banner { width: 100%; display: block; margin: 0 auto 22px; border: 1px solid rgba(250,204,21,.45); border-radius: 18px; box-shadow: 0 18px 45px rgba(0,0,0,.42); }
+.form-progress { max-width: 1100px; margin: 0 auto 28px; display: grid; grid-template-columns: repeat(4,1fr); overflow: hidden; border: 1px solid #475569; border-radius: 12px; background: #0f172a; color: #cbd5e1; }.form-progress span { padding: 12px; text-align: center; border-right: 1px solid #334155; font-size: .85rem; font-weight: 700; }.form-progress span:last-child { border: 0; }.race-section { margin-top: 28px; padding-top: 22px; border-top: 1px solid #334155; color: #e2e8f0; }.race-choice { display: inline-flex; gap: 7px; align-items:center; margin: 10px 18px 0 0; }.upload-note { color: #94a3b8; line-height: 1.6; }.form-group input[type=file] { padding: 12px; height: auto; }
+@media(max-width:600px){.form-progress{grid-template-columns:repeat(2,1fr)}.form-progress span:nth-child(2){border-right:0}.form-progress span:nth-child(-n+2){border-bottom:1px solid #334155}}

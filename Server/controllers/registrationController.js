@@ -2,30 +2,35 @@ import Registration from "../models/Registration.js";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import { createAdminSession } from "../middleware/adminAuth.js";
 
-const allowedDisciplines = ["Inline", "Quad", "Skateboard", "Roller Freestyle"];
+const allowedCategories = ["Adjustable Skate", "Toy Skate", "Quad", "Inline"];
+const uploadsDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../uploads");
 
 const cleanText = (value, maxLength) => typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 
 export const registrationPayload = (data) => {
   const fullName = cleanText(data.fullName, 80);
-  const fatherName = cleanText(data.fatherName, 80);
+  const rsfiRegistrationNo = cleanText(data.rsfiRegistrationNo, 80);
   const mobile = cleanText(data.mobile, 10);
-  const discipline = cleanText(data.discipline, 30);
+  const category = cleanText(data.category, 30);
   const gender = cleanText(data.gender, 10);
-  const candidatePhoto = cleanText(data.candidatePhoto, 200);
+  const club = cleanText(data.club, 100);
+  const coachName = cleanText(data.coachName, 80);
+  const state = cleanText(data.state, 100);
+  const aadhaarCard = cleanText(data.aadhaarCard, 200);
+  const dobCertificate = cleanText(data.dobCertificate, 200);
   const rsfiCard = cleanText(data.rsfiCard, 200);
 
-  if (!fullName || !fatherName || !/^[6-9]\d{9}$/.test(mobile) || !allowedDisciplines.includes(discipline) || !["Male", "Female", "Other"].includes(gender) || !candidatePhoto.startsWith("/uploads/candidates/")) {
+  const races = Array.isArray(data.races) ? data.races.filter((race) => typeof race === "string") : [];
+  const validRaces = category === "Adjustable Skate" || category === "Toy Skate" ? races.length === 1 && races[0] === "3 Laps" : races.length > 0 && races.every((race) => ["5 Laps", "8 Laps"].includes(race));
+  if (!fullName || !data.dob || !cleanText(data.ageGroup, 30) || !club || !coachName || !state || !/^[6-9]\d{9}$/.test(mobile) || !allowedCategories.includes(category) || !["Male", "Female"].includes(gender) || !validRaces || !aadhaarCard.startsWith("/uploads/documents/") || !dobCertificate.startsWith("/uploads/documents/")) {
     throw new Error("Invalid registration data.");
   }
 
-  if (["Inline", "Quad"].includes(discipline) && !rsfiCard.startsWith("/uploads/rsfi/")) {
-    throw new Error("A valid RSFI card is required for this discipline.");
-  }
-
-  return { fullName, fatherName, mobile, discipline, gender, candidatePhoto, rsfiCard, dob: data.dob || undefined, ageGroup: cleanText(data.ageGroup, 20), events: [discipline], amountPaid: 1, paymentStatus: "Paid" };
+  if (rsfiCard && !rsfiCard.startsWith("/uploads/rsfi/")) throw new Error("Invalid RSFI document.");
+  return { rsfiRegistrationNo, fullName, mobile, category, gender, club, coachName, state, aadhaarCard, dobCertificate, rsfiCard, dob: data.dob, ageGroup: cleanText(data.ageGroup, 30), races, amountPaid: 500, paymentStatus: "Paid" };
 };
 
 export const saveVerifiedRegistration = async (data, paymentId) => {
@@ -76,11 +81,11 @@ export const updateRegistrationApproval = async (req, res) => {
 };
 
 export const serveAdminDocument = (req, res) => {
-  const folders = { candidates: "uploads/candidates", rsfi: "uploads/rsfi" };
+  const folders = { candidates: "candidates", rsfi: "rsfi", documents: "documents" };
   const folder = folders[req.params.type];
   const filename = path.basename(req.params.filename);
   if (!folder || filename !== req.params.filename) return res.status(400).json({ success: false, message: "Invalid document request." });
-  const documentPath = path.resolve(folder, filename);
+  const documentPath = path.join(uploadsDirectory, folder, filename);
   if (!fs.existsSync(documentPath)) return res.status(404).json({ success: false, message: "Document not found." });
   res.sendFile(documentPath);
 };

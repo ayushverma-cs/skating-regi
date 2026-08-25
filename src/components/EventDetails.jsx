@@ -20,7 +20,7 @@ export default function EventDetails() {
 
           <div>
             <p className="label">Event Date</p>
-            <h3>15 September 2026</h3>
+            <h3>13 September 2026</h3>
           </div>
         </div>
 
@@ -29,7 +29,7 @@ export default function EventDetails() {
 
           <div>
             <p className="label">Venue</p>
-            <h3>Mathura, Uttar Pradesh</h3>
+            <h3>Jawahar Bagh Park, Police Line, Kacheri, Mathura</h3>
           </div>
         </div>
 

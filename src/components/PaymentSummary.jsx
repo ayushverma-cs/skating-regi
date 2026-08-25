@@ -8,7 +8,8 @@ export default function PaymentSummary({
 }) {
   return (
     <section className="registration-card">
-      <h2>Payment Summary</h2>
+      <h2>Payment &amp; Confirmation</h2>
+      <p className="upload-note">The registration is submitted after secure payment verification. Your payment receipt number is shown when payment succeeds.</p>
 
       <div className="payment-row">
         <span>Registration Fee</span>
