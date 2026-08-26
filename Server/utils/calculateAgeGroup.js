@@ -1,31 +1,12 @@
 export const calculateAgeGroup = (dob) => {
-  const [day, month, year] = dob.split("-");
-
-  const birthDate = new Date(year, month - 1, day);
-  const cutoffDate = new Date(process.env.AGE_CUTOFF_DATE);
-
-  console.log("DOB:", birthDate);
-  console.log("Cutoff:", cutoffDate);
-
-  let age = cutoffDate.getFullYear() - birthDate.getFullYear();
-
-  const monthDiff = cutoffDate.getMonth() - birthDate.getMonth();
-
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && cutoffDate.getDate() < birthDate.getDate())
-  ) {
-    age--;
-  }
-
-  console.log("Calculated Age:", age);
-
-  if (age < 8) return "U-8";
-  if (age < 10) return "U-10";
-  if (age < 12) return "U-12";
-  if (age < 14) return "U-14";
-  if (age < 16) return "U-16";
-  if (age < 19) return "U-19";
-
-  return "Senior";
+  const year = Number(String(dob).slice(0, 4));
+  if (!Number.isInteger(year)) return "";
+  if (year >= 2021 && year <= 2022) return "4-6 Years (2021-2022)";
+  if (year >= 2019 && year <= 2020) return "6-8 Years (2019-2020)";
+  if (year >= 2017 && year <= 2018) return "8-10 Years (2017-2018)";
+  if (year >= 2015 && year <= 2016) return "10-12 Years (2015-2016)";
+  if (year >= 2012 && year <= 2014) return "12-15 Years (2012-2014)";
+  if (year >= 2009 && year <= 2011) return "15-18 Years (2009-2011)";
+  if (year <= 2008) return "AB - 18 Years (2008 and Below)";
+  return "";
 };

@@ -1,5 +1,5 @@
 import path from "path";
-import { extractDOB } from "../services/pdfService.js";
+import { extractDOB, extractDOBFromImage } from "../services/pdfService.js";
 import { calculateAgeGroup } from "../utils/calculateAgeGroup.js";
 
 export const uploadRSFICard = async (req, res) => {
@@ -77,8 +77,15 @@ export const uploadCandidatePhoto = async (req, res) => {
 export const uploadDocument = async (req, res) => {
   try {
     const file = req.files?.[0];
-    if (!file || !["aadhaarCard", "dobCertificate", "rsfiCard"].includes(file.fieldname)) return res.status(400).json({ success: false, message: "No valid document uploaded." });
-    const folder = file.fieldname === "rsfiCard" ? "rsfi" : "documents";
-    res.status(200).json({ success: true, documentUrl: `/uploads/${folder}/${file.filename}` });
+    if (!file || !["aadhaarCard", "dobCertificate", "candidatePhoto"].includes(file.fieldname)) return res.status(400).json({ success: false, message: "No valid document uploaded." });
+    const folder = file.fieldname === "candidatePhoto" ? "candidates" : "documents";
+    let dob = ""; let ageGroup = "";
+    if (file.fieldname === "aadhaarCard") {
+      try {
+        dob = path.extname(file.originalname).toLowerCase() === ".pdf" ? await extractDOB(file.path) : await extractDOBFromImage(file.path);
+        ageGroup = calculateAgeGroup(dob);
+      } catch { /* The card was saved; the user can enter DOB manually if OCR cannot read it. */ }
+    }
+    res.status(200).json({ success: true, documentUrl: `/uploads/${folder}/${file.filename}`, dob, ageGroup });
   } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 };

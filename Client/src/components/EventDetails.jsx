@@ -47,7 +47,7 @@ export default function EventDetails() {
 
           <div>
             <p className="label">Event Date</p>
-            <h3>13 September 2026</h3>
+            <h3>6 September 2026</h3>
           </div>
         </div>
 

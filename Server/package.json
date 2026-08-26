@@ -18,7 +18,8 @@
     "mongoose": "^9.7.3",
     "multer": "^2.2.0",
     "pdf2json": "^4.0.3",
-    "razorpay": "^2.9.6"
+    "razorpay": "^2.9.6",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

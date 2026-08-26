@@ -17,6 +17,10 @@ router.post(
 );
 
 router.post("/candidate-photo", upload.single("candidatePhoto"), uploadCandidatePhoto);
-router.post("/document", upload.any(), uploadDocument);
+router.post("/document", upload.any(), uploadDocument, (error, req, res, next) => {
+  if (error?.code === "LIMIT_FILE_SIZE") return res.status(413).json({ success: false, message: "Maximum file size is 10 MB." });
+  if (error) return res.status(400).json({ success: false, message: error.message || "Unable to upload this file." });
+  next();
+});
 
 export default router;
