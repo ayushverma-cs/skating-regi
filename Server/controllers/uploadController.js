@@ -1,9 +1,8 @@
 import path from "path";
-import { checkPaymentScreenshot, extractDOB, extractDOBFromImage } from "../services/pdfService.js";
+import { extractDOB, extractDOBFromImage } from "../services/pdfService.js";
 import { calculateAgeGroup } from "../utils/calculateAgeGroup.js";
 
 const OCR_TIMEOUT_MS = 45_000;
-const PAYMENT_OCR_TIMEOUT_MS = 35_000;
 const withTimeout = (promise, timeout = OCR_TIMEOUT_MS) => Promise.race([
   promise,
   new Promise((_, reject) => setTimeout(() => reject(new Error("Document reading timed out.")), timeout)),
@@ -86,11 +85,7 @@ export const uploadPaymentScreenshot = async (req, res) => {
     if (!req.file || req.file.fieldname !== "paymentScreenshot") {
       return res.status(400).json({ success: false, message: "Please upload a JPG or PNG payment screenshot." });
     }
-    const paymentCheck = await withTimeout(checkPaymentScreenshot(req.file.path), PAYMENT_OCR_TIMEOUT_MS);
-    if (!paymentCheck.hasPaidIndicator || paymentCheck.amount !== 500) {
-      return res.status(422).json({ success: false, message: "We could not confirm a successful ₹500 payment from this screenshot. Please upload the payment-success screen showing ₹500." });
-    }
-    res.status(200).json({ success: true, documentUrl: `/uploads/payments/${req.file.filename}`, paymentCheck: { amount: 500, status: "₹500 payment detected" } });
+    res.status(200).json({ success: true, documentUrl: `/uploads/payments/${req.file.filename}`, paymentCheck: { amount: 500, status: "Payment screenshot uploaded — pending admin verification" } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message || "Screenshot upload failed." });
   }
