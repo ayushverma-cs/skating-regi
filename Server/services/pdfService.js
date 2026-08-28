@@ -3,7 +3,7 @@ import { createWorker } from "tesseract.js";
 
 const dobFromText = (text) => {
   const normalizedText = String(text || "").replace(/\s+/g, " ");
-  const dobRegex = /(?:Date\s*of\s*Birth|D\s*[O0]\s*B)\s*(?::|[-–—])?\s*(\d{1,2})\s*[\/.\-]\s*(\d{1,2})\s*[\/.\-]\s*((?:19|20)\d{2})/i;
+  const dobRegex = /(?:Date\s*of\s*Birth|D\s*[O0]\s*[B8])\s*[:\-]?\s*(\d{1,2})\s*[\/.\-]\s*(\d{1,2})\s*[\/.\-]\s*((?:19|20)\d{2})/i;
   const match = normalizedText.match(dobRegex);
   if (!match) return "";
   const day = Number(match[1]);
@@ -48,10 +48,13 @@ export const extractDOB = (filePath) => {
 export const extractDOBFromImage = async (filePath) => {
   const worker = await createWorker("eng");
   try {
-    const result = await worker.recognize(filePath);
-    const dob = dobFromText(result.data.text);
-    if (!dob) throw new Error("Date of Birth not found.");
-    return dob;
+    for (const pageSegmentationMode of ["6", "3", "11"]) {
+      await worker.setParameters({ tessedit_pageseg_mode: pageSegmentationMode });
+      const result = await worker.recognize(filePath);
+      const dob = dobFromText(result.data.text);
+      if (dob) return dob;
+    }
+    throw new Error("Date of Birth not found.");
   } finally { await worker.terminate(); }
 };
 
