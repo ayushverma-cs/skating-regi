@@ -3,7 +3,7 @@ import { checkPaymentScreenshot, extractDOB, extractDOBFromImage } from "../serv
 import { calculateAgeGroup } from "../utils/calculateAgeGroup.js";
 
 const OCR_TIMEOUT_MS = 45_000;
-const PAYMENT_OCR_TIMEOUT_MS = 15_000;
+const PAYMENT_OCR_TIMEOUT_MS = 35_000;
 const withTimeout = (promise, timeout = OCR_TIMEOUT_MS) => Promise.race([
   promise,
   new Promise((_, reject) => setTimeout(() => reject(new Error("Document reading timed out.")), timeout)),

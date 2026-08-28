@@ -17,6 +17,20 @@ const dobFromText = (text) => {
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 };
 
+const prepareImageForOcr = async (filePath) => {
+  const processedFilePath = `${filePath}.ocr.png`;
+  await sharp(filePath)
+    .rotate()
+    .resize({ width: 2200, withoutEnlargement: false })
+    .flatten({ background: "#ffffff" })
+    .grayscale()
+    .normalize()
+    .sharpen()
+    .png()
+    .toFile(processedFilePath);
+  return processedFilePath;
+};
+
 export const extractDOB = (filePath) => {
   return new Promise((resolve, reject) => {
     const pdfParser = new PDFParser();
@@ -51,15 +65,7 @@ export const extractDOBFromImage = async (filePath) => {
   const processedFilePath = `${filePath}.ocr.png`;
   const worker = await createWorker("eng");
   try {
-    await sharp(filePath)
-      .rotate()
-      .resize({ width: 2200, withoutEnlargement: false })
-      .flatten({ background: "#ffffff" })
-      .grayscale()
-      .normalize()
-      .sharpen()
-      .png()
-      .toFile(processedFilePath);
+    await prepareImageForOcr(filePath);
 
     for (const pageSegmentationMode of ["11", "6"]) {
       await worker.setParameters({ tessedit_pageseg_mode: pageSegmentationMode });
@@ -75,12 +81,18 @@ export const extractDOBFromImage = async (filePath) => {
 };
 
 export const checkPaymentScreenshot = async (filePath) => {
+  const processedFilePath = `${filePath}.ocr.png`;
   const worker = await createWorker("eng");
   try {
-    const result = await worker.recognize(filePath);
+    await prepareImageForOcr(filePath);
+    await worker.setParameters({ tessedit_pageseg_mode: "11" });
+    const result = await worker.recognize(processedFilePath);
     const text = result.data.text.replace(/\s+/g, " ").trim();
-    const hasPaidIndicator = /(?:payment\s*)?(?:successful|success|completed|paid)|transaction\s*(?:successful|completed)/i.test(text);
-    const amountMatch = text.match(/(?:₹|rs\.?|inr)\s*500(?:\.00)?\b|\b500\.00\b|amount\D{0,12}\b500\b/i);
+    const hasPaidIndicator = /(?:payment|transaction|upi|transfer)?\s*(?:successful|success|completed)|(?:paid|received|sent|debited)\s+(?:to|₹|rs\.?|inr|\d)/i.test(text);
+    const amountMatch = text.match(/(?:₹|rs\.?|inr|amount|paid|payment|total|debited|sent|transfer(?:red)?)\D{0,24}\b500(?:[.,]00)?\b|\b500[.,]00\b/i);
     return { hasPaidIndicator, amount: amountMatch ? 500 : 0, text: text.slice(0, 500) };
-  } finally { await worker.terminate(); }
+  } finally {
+    await worker.terminate();
+    await fs.rm(processedFilePath, { force: true });
+  }
 };
