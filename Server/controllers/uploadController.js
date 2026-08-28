@@ -2,7 +2,7 @@ import path from "path";
 import { checkPaymentScreenshot, extractDOB, extractDOBFromImage } from "../services/pdfService.js";
 import { calculateAgeGroup } from "../utils/calculateAgeGroup.js";
 
-const OCR_TIMEOUT_MS = 25_000;
+const OCR_TIMEOUT_MS = 45_000;
 const PAYMENT_OCR_TIMEOUT_MS = 15_000;
 const withTimeout = (promise, timeout = OCR_TIMEOUT_MS) => Promise.race([
   promise,

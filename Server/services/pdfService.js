@@ -1,4 +1,6 @@
+import fs from "fs/promises";
 import PDFParser from "pdf2json";
+import sharp from "sharp";
 import { createWorker } from "tesseract.js";
 
 const dobFromText = (text) => {
@@ -46,16 +48,30 @@ export const extractDOB = (filePath) => {
 };
 
 export const extractDOBFromImage = async (filePath) => {
+  const processedFilePath = `${filePath}.ocr.png`;
   const worker = await createWorker("eng");
   try {
-    for (const pageSegmentationMode of ["6", "3", "11"]) {
+    await sharp(filePath)
+      .rotate()
+      .resize({ width: 2200, withoutEnlargement: false })
+      .flatten({ background: "#ffffff" })
+      .grayscale()
+      .normalize()
+      .sharpen()
+      .png()
+      .toFile(processedFilePath);
+
+    for (const pageSegmentationMode of ["11", "6"]) {
       await worker.setParameters({ tessedit_pageseg_mode: pageSegmentationMode });
-      const result = await worker.recognize(filePath);
+      const result = await worker.recognize(processedFilePath);
       const dob = dobFromText(result.data.text);
       if (dob) return dob;
     }
     throw new Error("Date of Birth not found.");
-  } finally { await worker.terminate(); }
+  } finally {
+    await worker.terminate();
+    await fs.rm(processedFilePath, { force: true });
+  }
 };
 
 export const checkPaymentScreenshot = async (filePath) => {
