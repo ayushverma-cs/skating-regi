@@ -12,6 +12,13 @@ const ageGroupForDob = (dob) => {
   if (year >= 2009 && year <= 2011) return "15-18 Years (2009-2011)";
   return year && year <= 2008 ? "AB - 18 Years (2008 and Below)" : "";
 };
+const isValidDob = (dob) => {
+  const match = String(dob || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return false;
+  const [year, month, day] = match.slice(1).map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return year >= 1900 && year <= new Date().getUTCFullYear() && date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+};
 
 const Field = ({ label, error, children }) => <div className="form-group"><label>{label}</label>{children}{error && <small className="error-text">{error}</small>}</div>;
 
@@ -29,10 +36,13 @@ export default function ParticipantForm({ formData, handleChange, errors, docume
       if (!response.ok || !result.success || !result.documentUrl) throw new Error(result.message || "Upload failed. Please try again.");
       setDocuments((old) => ({ ...old, aadhaarCard: result.documentUrl, aadhaarCardName: file.name }));
       setErrors((old) => ({ ...old, aadhaarCard: "" }));
-      if (result.dob) {
+      if (isValidDob(result.dob)) {
         onAadhaarDetails(result.dob, result.ageGroup || ageGroupForDob(result.dob));
         setDobNeedsManualEntry(false);
-      } else setDobNeedsManualEntry(true);
+      } else {
+        onAadhaarDetails("", "");
+        setDobNeedsManualEntry(true);
+      }
     } catch (error) {
       setErrors((old) => ({ ...old, aadhaarCard: error instanceof TypeError ? "Could not reach the upload server. Please check your internet connection and try again." : error.message }));
     } finally { setDocuments((old) => ({ ...old, aadhaarCardUploading: false })); }
@@ -43,7 +53,7 @@ export default function ParticipantForm({ formData, handleChange, errors, docume
       <Field label="Name (Capital Letters) *" error={errors.fullName}><input name="fullName" value={formData.fullName} onChange={handleChange} placeholder="PARTICIPANT NAME" className={errors.fullName ? "input-error" : ""} /></Field>
       <Field label="Father's Name *" error={errors.fatherName}><input name="fatherName" value={formData.fatherName} onChange={handleChange} placeholder="FATHER'S NAME" className={errors.fatherName ? "input-error" : ""} /></Field>
       <Field label="Aadhaar Card *" error={errors.aadhaarCard}><span className="file-field-name">{documents.aadhaarCardName || "Upload Aadhaar to fetch DOB"}</span><label className="upload-btn" htmlFor="aadhaarCard">{documents.aadhaarCardUploading ? "Uploading and reading DOB..." : documents.aadhaarCard ? "Replace Aadhaar" : "Upload Aadhaar"}</label><input id="aadhaarCard" type="file" accept=".jpg,.jpeg,.png,.pdf" hidden onChange={(event) => uploadAadhaar(event.target.files?.[0])} /></Field>
-      <Field label="Date of Birth (DOB) *" error={errors.dob}><input type="date" name="dob" value={formData.dob} readOnly className={errors.dob ? "input-error" : ""} />{dobNeedsManualEntry && <small className="admin-subtext">DOB could not be detected automatically. Please try uploading the Aadhaar again.</small>}</Field>
+      <Field label="Date of Birth (DOB) *" error={errors.dob}><input type="date" name="dob" value={formData.dob} readOnly className={errors.dob ? "input-error" : ""} />{dobNeedsManualEntry && <small className="admin-subtext">We could not verify a valid DOB from this Aadhaar. Please upload it again.</small>}</Field>
       <Field label="Age Group *" error={errors.ageGroup}><input name="ageGroup" value={formData.ageGroup} readOnly placeholder="Filled automatically from DOB" className={errors.ageGroup ? "input-error" : ""} /></Field>
       <Field label="Gender *" error={errors.gender}><select name="gender" value={formData.gender} onChange={handleChange} className={errors.gender ? "input-error" : ""}><option value="">Select gender</option><option>Male</option><option>Female</option></select></Field>
       <Field label="Skating Category *" error={errors.category}><select name="category" value={formData.category} onChange={handleChange} className={errors.category ? "input-error" : ""}><option value="">Select skating category</option>{["Adjustable Skate", "Toy Skate", "Quad", "Inline"].map((item) => <option key={item}>{item}</option>)}</select></Field>
