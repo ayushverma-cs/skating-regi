@@ -8,6 +8,7 @@ export const validateForm = (formData, documents, agreed) => {
   if (!documents.aadhaarCard) errors.aadhaarCard = "Please upload the Aadhaar card.";
   if (!documents.candidatePhoto) errors.candidatePhoto = "Please upload the candidate photo.";
   if (!documents.dobCertificate) errors.dobCertificate = "Please upload the DOB certificate.";
+  if (!documents.paymentScreenshot) errors.paymentScreenshot = "Please upload the payment screenshot.";
   if (!agreed) errors.agreed = "Please confirm the parent/guardian injury-responsibility declaration.";
   return errors;
 };

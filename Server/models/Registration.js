@@ -16,10 +16,11 @@ const registrationSchema = new mongoose.Schema({
   aadhaarCard: { type: String, required: true },
   dobCertificate: { type: String, required: true },
   candidatePhoto: { type: String, required: true },
+  paymentScreenshot: { type: String, required: true },
   registrationId: { type: String, unique: true },
   paymentId: { type: String, unique: true, sparse: true, default: "" },
   amountPaid: { type: Number, default: 500 },
-  paymentStatus: { type: String, enum: ["Pending", "Paid", "Failed"], default: "Pending" },
+  paymentStatus: { type: String, enum: ["Pending", "Paid", "Failed", "Pending Verification"], default: "Pending Verification" },
   approvalStatus: { type: String, enum: ["Pending", "Approved", "Rejected"], default: "Pending" },
 }, { timestamps: true });
 

@@ -23,15 +23,16 @@ export const registrationPayload = (data) => {
   const state = cleanText(data.state, 100);
   const aadhaarCard = cleanText(data.aadhaarCard, 200);
   const dobCertificate = cleanText(data.dobCertificate, 200);
+  const paymentScreenshot = cleanText(data.paymentScreenshot, 200);
 
   const races = Array.isArray(data.races) ? data.races.filter((race) => typeof race === "string") : [];
   const validRaces = category === "Adjustable Skate" || category === "Toy Skate" ? races.length === 1 && races[0] === "3 Laps" : races.length === 2 && races.includes("5 Laps") && races.includes("8 Laps");
   const candidatePhoto = cleanText(data.candidatePhoto, 200);
-  if (!fullName || !fatherName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !data.dob || !cleanText(data.ageGroup, 50) || !club || !allowedRegions.includes(state) || !/^[6-9]\d{9}$/.test(mobile) || !allowedCategories.includes(category) || !["Male", "Female"].includes(gender) || !validRaces || !aadhaarCard.startsWith("/uploads/documents/") || !dobCertificate.startsWith("/uploads/documents/") || !candidatePhoto.startsWith("/uploads/candidates/")) {
+  if (!fullName || !fatherName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !data.dob || !cleanText(data.ageGroup, 50) || !club || !allowedRegions.includes(state) || !/^[6-9]\d{9}$/.test(mobile) || !allowedCategories.includes(category) || !["Male", "Female"].includes(gender) || !validRaces || !aadhaarCard.startsWith("/uploads/documents/") || !dobCertificate.startsWith("/uploads/documents/") || !candidatePhoto.startsWith("/uploads/candidates/") || !paymentScreenshot.startsWith("/uploads/payments/")) {
     throw new Error("Invalid registration data.");
   }
 
-  return { fullName, fatherName, email, mobile, category, gender, club, coachName, state, aadhaarCard, dobCertificate, candidatePhoto, dob: data.dob, ageGroup: cleanText(data.ageGroup, 50), races, amountPaid: 500, paymentStatus: "Paid" };
+  return { fullName, fatherName, email, mobile, category, gender, club, coachName, state, aadhaarCard, dobCertificate, candidatePhoto, paymentScreenshot, dob: data.dob, ageGroup: cleanText(data.ageGroup, 50), races, amountPaid: 500, paymentStatus: "Pending Verification" };
 };
 
 export const saveVerifiedRegistration = async (data, paymentId) => {
@@ -41,15 +42,25 @@ export const saveVerifiedRegistration = async (data, paymentId) => {
 };
 
 export const createRegistration = async (req, res) => {
-  res.status(403).json({ success: false, message: "Registrations are created only after verified payment." });
+  try {
+    const registration = await saveVerifiedRegistration(req.body, `MANUAL-${crypto.randomBytes(8).toString("hex")}`);
+    res.status(201).json({ success: true, message: "Payment screenshot received for verification.", registration });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message || "Unable to submit registration." });
+  }
 };
 
-export const adminLogin = (req, res) => {
+export const adminLogin = async (req, res) => {
   const password = typeof req.body.password === "string" ? req.body.password : "";
   const configuredPassword = process.env.ADMIN_PASSWORD || "";
   const isValid = configuredPassword.length > 0 && password.length === configuredPassword.length && crypto.timingSafeEqual(Buffer.from(password), Buffer.from(configuredPassword));
   if (!isValid) return res.status(401).json({ success: false, message: "Invalid admin password." });
-  res.json({ success: true, token: createAdminSession() });
+  try {
+    const registrations = await Registration.find().sort({ createdAt: -1 });
+    res.json({ success: true, token: createAdminSession(), registrations });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Unable to load registrations." });
+  }
 };
 
 export const getRegistrationsForAdmin = async (req, res) => {
@@ -82,7 +93,7 @@ export const updateRegistrationApproval = async (req, res) => {
 };
 
 export const serveAdminDocument = (req, res) => {
-  const folders = { candidates: "candidates", rsfi: "rsfi", documents: "documents" };
+  const folders = { candidates: "candidates", rsfi: "rsfi", documents: "documents", payments: "payments" };
   const folder = folders[req.params.type];
   const filename = path.basename(req.params.filename);
   if (!folder || filename !== req.params.filename) return res.status(400).json({ success: false, message: "Invalid document request." });

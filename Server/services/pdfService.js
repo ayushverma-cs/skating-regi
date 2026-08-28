@@ -50,3 +50,14 @@ export const extractDOBFromImage = async (filePath) => {
     return dob;
   } finally { await worker.terminate(); }
 };
+
+export const checkPaymentScreenshot = async (filePath) => {
+  const worker = await createWorker("eng");
+  try {
+    const result = await worker.recognize(filePath);
+    const text = result.data.text.replace(/\s+/g, " ").trim();
+    const hasPaidIndicator = /(?:payment\s*)?(?:successful|success|completed|paid)|transaction\s*(?:successful|completed)/i.test(text);
+    const amountMatch = text.match(/(?:₹|rs\.?|inr)\s*500(?:\.00)?\b|\b500\.00\b|amount\D{0,12}\b500\b/i);
+    return { hasPaidIndicator, amount: amountMatch ? 500 : 0, text: text.slice(0, 500) };
+  } finally { await worker.terminate(); }
+};

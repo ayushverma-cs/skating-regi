@@ -28,8 +28,6 @@ const instructions = [
   "Event timings may change due to weather or operational requirements.",
 ];
 
-const ageGroups = ["Under 6 Years", "6 to 8 Years", "8 to 10 Years", "10 to 12 Years", "12 to 15 Years", "15 to 18 Years", "18 Years & Above"];
-
 export default function EventDetails() {
   return (
     <section className="event-section" id="details">
@@ -98,10 +96,6 @@ export default function EventDetails() {
           <ul className="details-list">{instructions.map((instruction) => <li key={instruction}>{instruction}</li>)}</ul>
         </article>
 
-        <article className="details-panel age-groups-panel">
-          <h3><Trophy size={21} /> Age Groups</h3>
-          <ul className="age-groups-list">{ageGroups.map((group) => <li key={group}>{group}</li>)}</ul>
-        </article>
       </div>
 
     </section>

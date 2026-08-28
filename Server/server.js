@@ -3,7 +3,6 @@ import cors from "cors";
 import dotenv from "dotenv";
 import registrationRouter from "./router/registrationRouter.js";
 import connectDB from "./config/db.js";
-import paymentRouter from "./router/paymentRouter.js";
 import uploadRouter from "./router/uploadRouter.js";
 import { apiRateLimit } from "./middleware/rateLimit.js";
 dotenv.config();
@@ -37,7 +36,6 @@ app.use((req, res, next) => {
 app.use("/api", apiRateLimit);
 app.use("/api/registration", registrationRouter);
 app.use("/api/upload", uploadRouter);
-app.use("/api/payment", paymentRouter);
 
 app.get("/", (req, res) => {
   res.send("🚀 Roller Skating Championship API Running");
