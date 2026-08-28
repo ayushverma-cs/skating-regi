@@ -20,7 +20,7 @@ const registrationSchema = new mongoose.Schema({
   registrationId: { type: String, unique: true },
   paymentId: { type: String, unique: true, sparse: true, default: "" },
   amountPaid: { type: Number, default: 500 },
-  paymentStatus: { type: String, enum: ["Pending", "Paid", "Failed", "Pending Verification"], default: "Pending Verification" },
+  paymentStatus: { type: String, enum: ["Pending", "Paid", "Failed", "Submitted"], default: "Submitted" },
   approvalStatus: { type: String, enum: ["Pending", "Approved", "Rejected"], default: "Pending" },
 }, { timestamps: true });
 

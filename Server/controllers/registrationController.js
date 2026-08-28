@@ -32,7 +32,7 @@ export const registrationPayload = (data) => {
     throw new Error("Invalid registration data.");
   }
 
-  return { fullName, fatherName, email, mobile, category, gender, club, coachName, state, aadhaarCard, dobCertificate, candidatePhoto, paymentScreenshot, dob: data.dob, ageGroup: cleanText(data.ageGroup, 50), races, amountPaid: 500, paymentStatus: "Pending Verification" };
+  return { fullName, fatherName, email, mobile, category, gender, club, coachName, state, aadhaarCard, dobCertificate, candidatePhoto, paymentScreenshot, dob: data.dob, ageGroup: cleanText(data.ageGroup, 50), races, amountPaid: 500, paymentStatus: "Submitted" };
 };
 
 export const saveVerifiedRegistration = async (data, paymentId) => {
@@ -44,7 +44,7 @@ export const saveVerifiedRegistration = async (data, paymentId) => {
 export const createRegistration = async (req, res) => {
   try {
     const registration = await saveVerifiedRegistration(req.body, `MANUAL-${crypto.randomBytes(8).toString("hex")}`);
-    res.status(201).json({ success: true, message: "Payment screenshot received for verification.", registration });
+    res.status(201).json({ success: true, message: "Registration submitted successfully.", registration });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message || "Unable to submit registration." });
   }

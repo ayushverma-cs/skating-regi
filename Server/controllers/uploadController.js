@@ -85,7 +85,7 @@ export const uploadPaymentScreenshot = async (req, res) => {
     if (!req.file || req.file.fieldname !== "paymentScreenshot") {
       return res.status(400).json({ success: false, message: "Please upload a JPG or PNG payment screenshot." });
     }
-    res.status(200).json({ success: true, documentUrl: `/uploads/payments/${req.file.filename}`, paymentCheck: { amount: 500, status: "Payment screenshot uploaded — pending admin verification" } });
+    res.status(200).json({ success: true, documentUrl: `/uploads/payments/${req.file.filename}` });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message || "Screenshot upload failed." });
   }
