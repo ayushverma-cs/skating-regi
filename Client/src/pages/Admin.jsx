@@ -49,7 +49,11 @@ export default function Admin() {
       if (!name) throw new Error("Document is unavailable.");
       const response = await fetch(`${API_URL}/api/registration/admin/document/${type}/${encodeURIComponent(name)}`, { headers: { Authorization: `Bearer ${adminToken}` } });
       if (!response.ok) throw new Error(response.status === 404 ? "This document is no longer available on the server." : "Unable to open document.");
-      const url = URL.createObjectURL(await response.blob()); documentWindow.location.replace(url); setTimeout(() => URL.revokeObjectURL(url), 60000);
+      const blob = await response.blob();
+      if (!blob.size) throw new Error("The uploaded document is empty.");
+      const url = URL.createObjectURL(blob);
+      documentWindow.location.replace(url);
+      documentWindow.addEventListener("beforeunload", () => URL.revokeObjectURL(url), { once: true });
     } catch (err) { documentWindow?.close(); setError(err.message); }
   };
 

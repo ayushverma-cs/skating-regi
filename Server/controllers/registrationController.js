@@ -124,5 +124,9 @@ export const serveAdminDocument = (req, res) => {
   if (!folder || filename !== req.params.filename) return res.status(400).json({ success: false, message: "Invalid document request." });
   const documentPath = path.join(uploadsDirectory, folder, filename);
   if (!fs.existsSync(documentPath)) return res.status(404).json({ success: false, message: "Document not found." });
+  // Force browsers to render the fetched file in the authenticated admin tab
+  // instead of treating it as an arbitrary download or a JSON response.
+  res.type(path.extname(filename));
+  res.setHeader("Content-Disposition", `inline; filename="${filename.replaceAll('"', "")}"`);
   res.sendFile(documentPath);
 };
