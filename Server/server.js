@@ -2,14 +2,18 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import registrationRouter from "./router/registrationRouter.js";
+import paymentRouter from "./router/paymentRouter.js";
 import connectDB from "./config/db.js";
 import uploadRouter from "./router/uploadRouter.js";
 import { apiRateLimit } from "./middleware/rateLimit.js";
+import path from "path";
+import { fileURLToPath } from "url";
 dotenv.config();
 
 connectDB();
 
 const app = express();
+const uploadsDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "uploads");
 const allowedOrigins = new Set([
   "http://localhost:5173",
   process.env.CLIENT_ORIGIN
@@ -22,7 +26,7 @@ app.use(cors({
     if (!origin || allowedOrigins.has(origin) || isVercelDeployment(origin)) return callback(null, true);
     return callback(new Error("Origin is not allowed by CORS."));
   },
-  methods: ["GET", "POST", "PATCH"],
+  methods: ["GET", "POST", "PATCH", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 app.use(express.json({ limit: "100kb" }));
@@ -35,7 +39,9 @@ app.use((req, res, next) => {
 });
 app.use("/api", apiRateLimit);
 app.use("/api/registration", registrationRouter);
+app.use("/api/payment", paymentRouter);
 app.use("/api/upload", uploadRouter);
+app.use("/uploads/candidates", express.static(path.join(uploadsDirectory, "candidates")));
 
 app.get("/", (req, res) => {
   res.send("🚀 Roller Skating Championship API Running");

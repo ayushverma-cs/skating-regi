@@ -7,6 +7,8 @@ import ParticipantForm from "../components/ParticipantForm";
 import DocumentsUpload from "../components/DocumentsUpload";
 import PaymentSummary from "../components/PaymentSummary";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 const start = {
   rsfiRegistrationNo: "",
   fullName: "",
@@ -66,7 +68,7 @@ export default function Registration() {
     try {
       // Create Razorpay order
       const r = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/payment/create-order`,
+        `${API_URL}/api/payment/create-order`,
         {
           method: "POST"
         }
@@ -74,11 +76,15 @@ export default function Registration() {
 
       const j = await r.json();
 
-      if (!j.success) {
-        throw new Error(j.message);
+      if (!r.ok || !j.success || !j.order) {
+        throw new Error(j.message || "Unable to create a payment order.");
       }
 
       // Open Razorpay
+      if (!window.Razorpay) {
+        throw new Error("The payment service could not be loaded. Please refresh and try again.");
+      }
+
       new window.Razorpay({
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: j.order.amount,
@@ -93,7 +99,7 @@ export default function Registration() {
         // Verify payment
         handler: async (p) => {
           const v = await fetch(
-            `${import.meta.env.VITE_API_URL}/api/payment/verify`,
+            `${API_URL}/api/payment/verify`,
             {
               method: "POST",
               headers: {
@@ -109,10 +115,10 @@ export default function Registration() {
             }
           );
 
-          const result = await v.json();
+          const result = await v.json().catch(() => ({}));
 
-          if (!result.success) {
-            throw new Error(result.message);
+          if (!v.ok || !result.success) {
+            throw new Error(result.message || "Payment verification failed.");
           }
 
           alert(

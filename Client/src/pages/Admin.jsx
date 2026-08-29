@@ -13,6 +13,7 @@ export default function Admin() {
   const [ageGroup, setAgeGroup] = useState("All");
   const [category, setCategory] = useState("All");
   const [adminToken, setAdminToken] = useState(() => sessionStorage.getItem("adminToken") || "");
+  const [deletingId, setDeletingId] = useState("");
 
   const loadRegistrations = async (token) => {
     const response = await fetch(`${API_URL}/api/registration/admin`, { headers: { Authorization: `Bearer ${token}` } });
@@ -40,6 +41,7 @@ export default function Admin() {
   };
 
   const openDocument = async (type, filePath) => {
+    if (type === "delete") return deleteRegistration(filePath);
     const documentWindow = window.open("", "_blank");
     try {
       if (!documentWindow) throw new Error("Your browser blocked the document tab. Please allow pop-ups for this site.");
@@ -49,6 +51,19 @@ export default function Admin() {
       if (!response.ok) throw new Error(response.status === 404 ? "This document is no longer available on the server." : "Unable to open document.");
       const url = URL.createObjectURL(await response.blob()); documentWindow.location.replace(url); setTimeout(() => URL.revokeObjectURL(url), 60000);
     } catch (err) { documentWindow?.close(); setError(err.message); }
+  };
+
+  const deleteRegistration = async (student) => {
+    if (deletingId) return;
+    const name = student.registrationId ? `${student.fullName} (${student.registrationId})` : student.fullName;
+    if (!window.confirm(`Delete the registration for ${name}? This permanently removes its uploaded documents.`)) return;
+    setDeletingId(student._id); setError("");
+    try {
+      const response = await fetch(`${API_URL}/api/registration/admin/${student._id}`, { method: "DELETE", headers: { Authorization: `Bearer ${adminToken}` } });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.success) throw new Error(result.message || "Unable to delete registration.");
+      setRegistrations((current) => current.filter((item) => item._id !== student._id));
+    } catch (err) { setError(err.message); } finally { setDeletingId(""); }
   };
 
   const categories = ["All", ...new Set(registrations.map((item) => item.category).filter(Boolean))];
@@ -78,8 +93,8 @@ export default function Admin() {
         <select aria-label="Filter by skating category" value={category} onChange={handleCategoryChange}>{categories.map((item) => <option key={item} value={item}>{item === "All" ? "All skating categories" : item}</option>)}</select>
         <select aria-label="Filter by age group within the selected category" value={ageGroup} onChange={(event) => setAgeGroup(event.target.value)}>{ages.map((item) => <option key={item} value={item}>{item === "All" ? "All age groups in this category" : item}</option>)}</select>
       </div>
-      <div className="table-scroll"><table className="admin-table"><thead><tr><th>ID</th><th>Participant details</th><th>Contact &amp; club</th><th>Documents</th><th>Amount</th></tr></thead><tbody>{visible.map((student) => {
-        const docs = [["candidates", student.candidatePhoto, "Photo"], ["documents", student.aadhaarCard, "Aadhaar"], ["documents", student.dobCertificate, "DOB certificate"], ["payments", student.paymentScreenshot, "Payment screenshot"]].filter(([, file]) => file);
+      <div className="table-scroll"><table className="admin-table"><thead><tr><th>ID</th><th>Participant details</th><th>Contact &amp; club</th><th>Documents &amp; actions</th><th>Amount</th></tr></thead><tbody>{visible.map((student) => {
+        const docs = [["candidates", student.candidatePhoto, "Photo"], ["documents", student.aadhaarCard, "Aadhaar"], ["documents", student.dobCertificate, "DOB certificate"], ["payments", student.paymentScreenshot, "Payment screenshot"], ["delete", student, deletingId === student._id ? "Deleting…" : "Delete registration"]].filter(([, file]) => file);
         return <tr key={student._id}><td>{student.registrationId}</td><td><strong>{student.fullName}</strong><small className="admin-subtext">Father: {student.fatherName}</small><small className="admin-subtext">DOB: {student.dob ? new Date(student.dob).toLocaleDateString("en-IN") : "—"} · {student.ageGroup}</small><small className="admin-subtext">{student.gender} · {student.category} · {student.races?.join(", ")}</small></td><td>{student.mobile}<small className="admin-subtext">{student.email || "—"}</small><small className="admin-subtext">{student.club}{student.coachName ? ` · ${student.coachName}` : ""}</small></td><td><div className="document-links">{docs.map(([type, file, label]) => <button key={label} type="button" onClick={() => openDocument(type, file)}><FileText size={14} /> {label}</button>)}</div></td><td>₹{student.amountPaid || 0}</td></tr>;
       })}</tbody></table></div>
     </section>}

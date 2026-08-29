@@ -92,6 +92,31 @@ export const updateRegistrationApproval = async (req, res) => {
   }
 };
 
+export const deleteRegistration = async (req, res) => {
+  try {
+    const registration = await Registration.findByIdAndDelete(req.params.id);
+    if (!registration) return res.status(404).json({ success: false, message: "Registration not found." });
+
+    const uploads = [
+      ["candidates", registration.candidatePhoto],
+      ["documents", registration.aadhaarCard],
+      ["documents", registration.dobCertificate],
+      ["payments", registration.paymentScreenshot],
+    ];
+    uploads.forEach(([folder, filePath]) => {
+      const filename = path.basename(filePath || "");
+      const expectedPrefix = `/uploads/${folder}/`;
+      if (!filename || !String(filePath).startsWith(expectedPrefix)) return;
+      const target = path.join(uploadsDirectory, folder, filename);
+      if (fs.existsSync(target)) fs.unlinkSync(target);
+    });
+
+    res.json({ success: true, message: "Registration deleted." });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message || "Unable to delete registration." });
+  }
+};
+
 export const serveAdminDocument = (req, res) => {
   const folders = { candidates: "candidates", rsfi: "rsfi", documents: "documents", payments: "payments" };
   const folder = folders[req.params.type];
