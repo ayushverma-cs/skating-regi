@@ -20,6 +20,18 @@ const isValidDob = (dob) => {
   return year >= 1900 && year <= new Date().getUTCFullYear() && date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 };
 
+const uploadAadhaarFile = async (data) => {
+  const upload = () => fetch(`${API_URL}/api/upload/document`, { method: "POST", body: data });
+  try {
+    return await upload();
+  } catch (firstError) {
+    // Render services can take a moment to wake up. Retry once before showing
+    // a network error, without retrying a server response that may be invalid.
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    return upload();
+  }
+};
+
 const Field = ({ label, error, children }) => <div className="form-group"><label>{label}</label>{children}{error && <small className="error-text">{error}</small>}</div>;
 
 export default function ParticipantForm({ formData, handleChange, errors, documents, setDocuments, setErrors, onAadhaarDetails }) {
@@ -30,8 +42,10 @@ export default function ParticipantForm({ formData, handleChange, errors, docume
     if (file.size > 10 * 1024 * 1024) { setErrors((old) => ({ ...old, aadhaarCard: "Maximum file size is 10 MB." })); return; }
     const data = new FormData(); data.append("aadhaarCard", file);
     setDocuments((old) => ({ ...old, aadhaarCardUploading: true }));
+    setDobNeedsManualEntry(false);
+    setErrors((old) => ({ ...old, aadhaarCard: "" }));
     try {
-      const response = await fetch(`${API_URL}/api/upload/document`, { method: "POST", body: data });
+      const response = await uploadAadhaarFile(data);
       const result = await response.json().catch(() => ({}));
       if (!response.ok || !result.success || !result.documentUrl) throw new Error(result.message || "Upload failed. Please try again.");
       setDocuments((old) => ({ ...old, aadhaarCard: result.documentUrl, aadhaarCardName: file.name }));
@@ -52,7 +66,7 @@ export default function ParticipantForm({ formData, handleChange, errors, docume
     <div className="form-grid">
       <Field label="Name (Capital Letters) *" error={errors.fullName}><input name="fullName" value={formData.fullName} onChange={handleChange} placeholder="PARTICIPANT NAME" className={errors.fullName ? "input-error" : ""} /></Field>
       <Field label="Father's Name *" error={errors.fatherName}><input name="fatherName" value={formData.fatherName} onChange={handleChange} placeholder="FATHER'S NAME" className={errors.fatherName ? "input-error" : ""} /></Field>
-      <Field label="Aadhaar Card *" error={errors.aadhaarCard}><span className="file-field-name">{documents.aadhaarCardName || "JPG, PNG or PDF — upload Aadhaar to fetch DOB"}</span><label className="upload-btn" htmlFor="aadhaarCard">{documents.aadhaarCardUploading ? "Uploading and reading DOB..." : documents.aadhaarCard ? "Replace Aadhaar" : "Upload Aadhaar"}</label><input id="aadhaarCard" type="file" accept=".jpg,.jpeg,.png,.pdf,application/pdf" hidden onChange={(event) => uploadAadhaar(event.target.files?.[0])} /></Field>
+      <Field label="Aadhaar Card *" error={errors.aadhaarCard}><span className="file-field-name">{documents.aadhaarCardName || "JPG, PNG or PDF — upload Aadhaar to fetch DOB"}</span><label className="upload-btn" htmlFor="aadhaarCard">{documents.aadhaarCardUploading ? "Uploading and reading DOB..." : documents.aadhaarCard ? "Replace Aadhaar" : "Upload Aadhaar"}</label><input id="aadhaarCard" type="file" accept=".jpg,.jpeg,.png,.pdf,application/pdf" hidden onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; uploadAadhaar(file); }} /></Field>
       <Field label="Date of Birth (DOB) *" error={errors.dob}><input type="date" name="dob" value={formData.dob} readOnly className={errors.dob ? "input-error" : ""} />{dobNeedsManualEntry && <small className="admin-subtext">We could not verify a valid DOB from this Aadhaar. Please upload it again.</small>}</Field>
       <Field label="Age Group *" error={errors.ageGroup}><input name="ageGroup" value={formData.ageGroup} readOnly placeholder="Filled automatically from DOB" className={errors.ageGroup ? "input-error" : ""} /></Field>
       <Field label="Gender *" error={errors.gender}><select name="gender" value={formData.gender} onChange={handleChange} className={errors.gender ? "input-error" : ""}><option value="">Select gender</option><option>Male</option><option>Female</option></select></Field>

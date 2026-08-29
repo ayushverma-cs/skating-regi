@@ -2,7 +2,9 @@ import path from "path";
 import { extractDOB, extractDOBFromImage } from "../services/pdfService.js";
 import { calculateAgeGroup } from "../utils/calculateAgeGroup.js";
 
-const OCR_TIMEOUT_MS = 45_000;
+// Full Aadhaar scans can contain both sides and need several rotation passes.
+// Give OCR enough time to finish, while still preventing an unbounded request.
+const OCR_TIMEOUT_MS = 75_000;
 const withTimeout = (promise, timeout = OCR_TIMEOUT_MS) => Promise.race([
   promise,
   new Promise((_, reject) => setTimeout(() => reject(new Error("Document reading timed out.")), timeout)),
