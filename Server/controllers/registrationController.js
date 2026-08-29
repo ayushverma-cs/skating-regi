@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createAdminSession } from "../middleware/adminAuth.js";
+import UploadedFile from "../models/UploadedFile.js";
 
 const allowedCategories = ["Adjustable Skate", "Toy Skate", "Quad", "Inline"];
 const allowedRegions = ["Agra", "Mathura", "Firozabad", "Mainpuri"];
@@ -103,13 +104,16 @@ export const deleteRegistration = async (req, res) => {
       ["documents", registration.dobCertificate],
       ["payments", registration.paymentScreenshot],
     ];
-    uploads.forEach(([folder, filePath]) => {
+    for (const [folder, filePath] of uploads) {
       const filename = path.basename(filePath || "");
       const expectedPrefix = `/uploads/${folder}/`;
-      if (!filename || !String(filePath).startsWith(expectedPrefix)) return;
-      const target = path.join(uploadsDirectory, folder, filename);
-      if (fs.existsSync(target)) fs.unlinkSync(target);
-    });
+      if (!filename || !String(filePath).startsWith(expectedPrefix)) continue;
+      const persistentUpload = await UploadedFile.findOneAndDelete({ folder, storageName: filename });
+      if (!persistentUpload) {
+        const target = path.join(uploadsDirectory, folder, filename);
+        if (fs.existsSync(target)) fs.unlinkSync(target);
+      }
+    }
 
     res.json({ success: true, message: "Registration deleted." });
   } catch (error) {
@@ -117,15 +121,21 @@ export const deleteRegistration = async (req, res) => {
   }
 };
 
-export const serveAdminDocument = (req, res) => {
+export const serveAdminDocument = async (req, res) => {
   const folders = { candidates: "candidates", rsfi: "rsfi", documents: "documents", payments: "payments" };
   const folder = folders[req.params.type];
   const filename = path.basename(req.params.filename);
   if (!folder || filename !== req.params.filename) return res.status(400).json({ success: false, message: "Invalid document request." });
-  const documentPath = path.join(uploadsDirectory, folder, filename);
-  if (!fs.existsSync(documentPath)) return res.status(404).json({ success: false, message: "Document not found." });
+  const persistentUpload = await UploadedFile.findOne({ folder, storageName: filename });
   // Force browsers to render the fetched file in the authenticated admin tab
   // instead of treating it as an arbitrary download or a JSON response.
+  if (persistentUpload) {
+    res.type(persistentUpload.mimeType);
+    res.setHeader("Content-Disposition", `inline; filename="${String(persistentUpload.originalName).replaceAll('"', "")}"`);
+    return res.send(persistentUpload.data);
+  }
+  const documentPath = path.join(uploadsDirectory, folder, filename);
+  if (!fs.existsSync(documentPath)) return res.status(404).json({ success: false, message: "Document not found." });
   res.type(path.extname(filename));
   res.setHeader("Content-Disposition", `inline; filename="${filename.replaceAll('"', "")}"`);
   res.sendFile(documentPath);
