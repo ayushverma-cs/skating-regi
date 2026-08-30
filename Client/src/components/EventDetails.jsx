@@ -54,7 +54,7 @@ export default function EventDetails() {
 
           <div>
             <p className="label">Venue</p>
-            <h3>JAWAHAR BAGH PARK, MATHUR</h3>
+            <h3>JAWAHAR BAGH PARK, POLICE LINE, KACHERI, MATHURA</h3>
           </div>
         </div>
 
@@ -72,7 +72,7 @@ export default function EventDetails() {
 
           <div>
             <p className="label">Categories</p>
-            <h3>Inline, Quad &amp; Adjustable Toy Skate</h3>
+            <h3>Inline, Quad, Adjustable &amp; Toy Skate</h3>
           </div>
         </div>
 

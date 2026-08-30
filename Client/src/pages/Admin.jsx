@@ -52,8 +52,10 @@ export default function Admin() {
       const blob = await response.blob();
       if (!blob.size) throw new Error("The uploaded document is empty.");
       const url = URL.createObjectURL(blob);
+      // Do not revoke this object URL from the popup's `beforeunload` event.
+      // That event fires while the blank popup navigates to the document, which
+      // invalidates the URL before PDFs and images have a chance to render.
       documentWindow.location.replace(url);
-      documentWindow.addEventListener("beforeunload", () => URL.revokeObjectURL(url), { once: true });
     } catch (err) { documentWindow?.close(); setError(err.message); }
   };
 
