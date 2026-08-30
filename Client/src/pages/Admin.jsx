@@ -42,9 +42,11 @@ export default function Admin() {
 
   const openDocument = async (type, filePath) => {
     if (type === "delete") return deleteRegistration(filePath);
-    const documentWindow = window.open("", "_blank");
+    const documentWindow = window.open("about:blank", "_blank");
     try {
       if (!documentWindow) throw new Error("Your browser blocked the document tab. Please allow pop-ups for this site.");
+      documentWindow.document.title = "Opening document…";
+      documentWindow.document.body.innerHTML = '<p style="font-family:system-ui,sans-serif;padding:24px">Opening document…</p>';
       const name = filePath?.split("/").filter(Boolean).pop();
       if (!name) throw new Error("Document is unavailable.");
       const response = await fetch(`${API_URL}/api/registration/admin/document/${type}/${encodeURIComponent(name)}`, { headers: { Authorization: `Bearer ${adminToken}` } });
@@ -52,11 +54,23 @@ export default function Admin() {
       const blob = await response.blob();
       if (!blob.size) throw new Error("The uploaded document is empty.");
       const url = URL.createObjectURL(blob);
-      // Do not revoke this object URL from the popup's `beforeunload` event.
-      // That event fires while the blank popup navigates to the document, which
-      // invalidates the URL before PDFs and images have a chance to render.
-      documentWindow.location.replace(url);
-    } catch (err) { documentWindow?.close(); setError(err.message); }
+      // Keep the preview in a standalone browser document. Navigating the tab
+      // directly to a blob can be treated as an app route by some browsers.
+      documentWindow.document.title = name;
+      documentWindow.document.body.innerHTML = "";
+      const preview = documentWindow.document.createElement("iframe");
+      preview.src = url;
+      preview.title = name;
+      preview.style.cssText = "position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff;";
+      documentWindow.document.body.appendChild(preview);
+    } catch (err) {
+      if (documentWindow && !documentWindow.closed) {
+        documentWindow.document.title = "Unable to open document";
+        documentWindow.document.body.innerHTML = '<p style="font-family:system-ui,sans-serif;padding:24px"></p>';
+        documentWindow.document.body.firstChild.textContent = err.message;
+      }
+      setError(err.message);
+    }
   };
 
   const deleteRegistration = async (student) => {
